@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator - Vixel Creative</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Agar Dark Mode tetap muncul pas Save PDF */
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: #0f172a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .page-preview { 
+                margin: 0; 
+                width: 100%; 
+                border: none; 
+                padding: 0;
+                box-shadow: none;
+            }
+            /* Paksa background gelap tercetak */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+
+        .page-preview {
+            width: 210mm;
+            min-height: 297mm;
+            /* Gradient Background ala Vixel */
+            background: linear-gradient(145deg, #020617 0%, #0f172a 100%);
+            color: white;
+            padding: 40px;
+            box-shadow: 0 0 20px rgba(0,255,255,0.1);
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Aksen Neon */
+        .neon-text {
+            text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+        }
+        .neon-border {
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white h-screen overflow-hidden flex">
+
+    <div id="app" class="w-full h-full flex">
+        
+        <div class="no-print w-1/3 h-full bg-slate-950 border-r border-slate-800 overflow-y-auto p-6 z-10 scrollbar-hide">
+            <h2 class="text-xl font-bold mb-6 text-cyan-400 tracking-wider">VIXEL // CONFIG</h2>
+
+            <div class="space-y-4 mb-8 border-b border-slate-800 pb-6">
+                <h3 class="font-bold text-xs text-slate-500 uppercase tracking-widest">1. Invoice Meta</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] text-slate-500">Nomor INV</label>
+                        <input v-model="invoice.number" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm text-cyan-400 font-mono focus:border-cyan-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-500">Tanggal</label>
+                        <input v-model="invoice.date" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm text-white focus:border-cyan-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4 mb-8 border-b border-slate-800 pb-6">
+                <h3 class="font-bold text-xs text-slate-500 uppercase tracking-widest">2. Client Data</h3>
+                <input v-model="client.name" placeholder="Nama Klien" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none">
+                <textarea v-model="client.address" rows="2" placeholder="Alamat Klien" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none"></textarea>
+                <input v-model="client.contact" placeholder="Email / WA Klien (Opsional)" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none">
+            </div>
+
+            <div class="space-y-4 mb-20">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-xs text-slate-500 uppercase tracking-widest">3. Services</h3>
+                    <button @click="addItem" class="text-[10px] bg-cyan-900 text-cyan-300 hover:bg-cyan-800 px-3 py-1 rounded font-bold border border-cyan-700">+ ADD ITEM</button>
+                </div>
+                
+                <div v-for="(item, index) in items" :key="index" class="bg-slate-900 p-3 rounded border border-slate-800 relative group hover:border-cyan-900 transition-colors">
+                    <button @click="removeItem(index)" class="absolute top-2 right-2 text-slate-600 hover:text-red-500 text-xs font-bold">✕</button>
+                    <input v-model="item.desc" placeholder="Nama Layanan" class="w-full bg-transparent border-b border-slate-800 focus:border-cyan-500 outline-none text-sm py-1 font-bold mb-1 text-white">
+                    <input v-model="item.sub" placeholder="Detail teknis (opsional)" class="w-full bg-transparent border-none outline-none text-xs text-slate-500 py-0 mb-2">
+                    <div class="flex gap-2">
+                        <input v-model="item.qty" type="number" class="w-16 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-center text-white" placeholder="Qty">
+                        <input v-model="item.price" type="number" class="flex-1 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-right text-cyan-400 font-mono" placeholder="Harga">
+                    </div>
+                </div>
+            </div>
+
+            <div class="fixed bottom-0 left-0 w-1/3 bg-slate-950 p-4 border-t border-slate-800">
+                <button onclick="window.print()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 rounded shadow-[0_0_15px_rgba(6,182,212,0.5)] transition-all">
+                    SAVE AS PDF 
+                </button>
+            </div>
+        </div>
+
+        <div class="w-2/3 h-full overflow-y-auto bg-black p-10 flex justify-center">
+            
+            <div class="page-preview flex flex-col justify-between">
+                
+                <div>
+                    <div class="flex justify-between items-start mb-16">
+                        <div>
+                            <h1 class="text-3xl font-extrabold tracking-tighter text-white">VIXEL CREATIVE<span class="text-cyan-400">.</span></h1>
+                            <p class="mt-2 text-sm text-slate-400 font-light tracking-wide">
+                                Visuals by <span class="text-white font-medium">Heart</span>. <br>
+                                Logic by <span class="text-cyan-400 font-bold neon-text">Code</span>.
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-5xl font-black text-slate-800 uppercase tracking-widest select-none">INVOICE</div>
+                            <div class="text-cyan-400 font-mono text-xl font-bold mt-[-20px] relative z-10">{{ invoice.number }}</div>
+                            <div class="text-slate-400 text-xs mt-1">{{ invoice.date }}</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-12 mb-12">
+                        <div>
+                            <p class="text-[10px] font-bold text-cyan-600 uppercase tracking-widest mb-3">BILLED TO</p>
+                            <h3 class="text-xl font-bold text-white mb-1">{{ client.name }}</h3>
+                            <p class="text-sm text-slate-400 leading-relaxed whitespace-pre-line">{{ client.address }}</p>
+                            <p class="text-sm text-cyan-400 mt-2">{{ client.contact }}</p>
+                        </div>
+                        
+                        <div class="text-right">
+                            <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">FROM</p>
+                            <h3 class="text-lg font-bold text-white">Wildan Abdillah</h3>
+                            <p class="text-sm text-slate-400">Founder, Vixel Creative</p>
+                            <div class="mt-4 text-xs text-slate-500 space-y-1">
+                                <p>Surabaya, East Java</p>
+                                <p>vixelcreative.my.id</p>
+                                <p>contact@vixelcreative.my.id</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full mb-8">
+                        <div class="flex border-b border-cyan-900/50 pb-2 mb-4 text-[10px] font-bold text-cyan-500 uppercase tracking-widest">
+                            <div class="w-3/5">Description</div>
+                            <div class="w-20 text-center">Qty</div>
+                            <div class="flex-1 text-right">Price</div>
+                            <div class="flex-1 text-right">Total</div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div v-for="(item, index) in items" :key="index" class="flex items-start group">
+                                <div class="w-3/5 pr-4">
+                                    <div class="text-sm font-bold text-white">{{ item.desc }}</div>
+                                    <div class="text-xs text-slate-500 mt-0.5" v-if="item.sub">{{ item.sub }}</div>
+                                </div>
+                                <div class="w-20 text-center text-sm text-slate-400">{{ item.qty }}</div>
+                                <div class="flex-1 text-right text-sm text-slate-400 font-mono">{{ formatCurrency(item.price) }}</div>
+                                <div class="flex-1 text-right text-sm text-cyan-400 font-bold font-mono">{{ formatCurrency(item.qty * item.price) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-end mb-12 border-t border-slate-800 pt-6">
+                        <div class="w-1/2">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs text-slate-500">Subtotal</span>
+                                <span class="text-sm text-slate-300 font-mono">{{ formatCurrency(grandTotal) }}</span>
+                            </div>
+                            <div class="flex justify-between items-end mt-4 pt-4 border-t border-slate-800">
+                                <span class="text-sm font-bold text-white">TOTAL DUE</span>
+                                <span class="text-3xl font-black text-white neon-text">{{ formatCurrency(grandTotal) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-8 pt-8 border-t border-dashed border-slate-800">
+                        <div>
+                            <p class="text-[10px] font-bold text-cyan-600 uppercase tracking-widest mb-3">PAYMENT DETAILS</p>
+                            <div class="bg-slate-900/50 p-4 rounded border border-slate-800 inline-block w-full">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs text-slate-400">Bank</span>
+                                    <span class="text-sm font-bold text-white">BCA (Bank Central Asia)</span>
+                                </div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs text-slate-400">Account</span>
+                                    <span class="text-sm font-mono text-cyan-400 font-bold tracking-wider">123 456 7890</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-slate-400">Name</span>
+                                    <span class="text-xs font-bold text-white uppercase">Wildan Abdillah</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-right flex flex-col justify-between">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-2">TERMS & NOTES</p>
+                                <p class="text-xs text-slate-500 leading-relaxed">
+                                    Please send the transfer proof via WhatsApp.<br>
+                                    Payment is due within 7 days.
+                                </p>
+                            </div>
+                            <div class="mt-4">
+                                <p class="text-xs text-cyan-700 font-mono">vixelcreative.my.id</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-10 pointer-events-none"></div>
+                <div class="absolute bottom-0 left-0 w-64 h-64 bg-blue-600 rounded-full mix-blend-overlay filter blur-[100px] opacity-10 pointer-events-none"></div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const { createApp } = Vue
+
+        createApp({
+            data() {
+                return {
+                    invoice: {
+                        number: 'INV/VXL/25001',
+                        date: '29 Dec 2025'
+                    },
+                    client: {
+                        name: 'UPT PUSKESWAN',
+                        address: 'Jl. Raya Trenggalek\nJawa Timur, Indonesia',
+                        contact: 'dinas@trenggalek.go.id'
+                    },
+                    items: [
+                        { desc: 'Integrated Management System', sub: 'Core Development, Auth, Database', qty: 1, price: 7500000 },
+                        { desc: 'UI/UX Design Implementation', sub: 'Dark Mode Interface, Responsive', qty: 1, price: 2500000 },
+                    ]
+                }
+            },
+            computed: {
+                grandTotal() {
+                    return this.items.reduce((sum, item) => sum + (item.qty * item.price), 0);
+                }
+            },
+            methods: {
+                formatCurrency(value) {
+                    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
+                },
+                addItem() {
+                    this.items.push({ desc: 'New Service', sub: '', qty: 1, price: 0 });
+                },
+                removeItem(index) {
+                    this.items.splice(index, 1);
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
