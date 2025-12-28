@@ -3,21 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice Generator - Vixel Creative</title>
+    <title>Invoice - Vixel Creative</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         
-        /* Config Print: Background Gelap Tetap Muncul */
+        /* === FULL WIDTH PRINT SETTING === */
         @media print {
+            @page { margin: 0; size: auto; }
             .no-print { display: none !important; }
-            body { background-color: #020617 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .page-preview { 
-                margin: 0; width: 100%; border: none; padding: 0; box-shadow: none; 
-                transform: none !important; 
+            
+            body { 
+                background-color: #020617 !important; 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+                margin: 0 !important;
             }
+            
+            .page-preview { 
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important; 
+                border: none !important; 
+                box-shadow: none !important;
+                padding: 20px 30px !important; 
+                transform: none !important; 
+                min-height: auto !important;
+            }
+            
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             ::-webkit-scrollbar { display: none; }
         }
@@ -25,15 +40,14 @@
         .page-preview {
             width: 210mm;
             min-height: 297mm;
-            background: #020617; /* Pure Dark Background */
+            background: #020617; 
             color: white;
-            padding: 40px;
+            padding: 40px; 
             position: relative;
             overflow: hidden;
             flex-shrink: 0;
         }
 
-        /* Glass Effect Table */
         .glass-box {
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid rgba(34, 211, 238, 0.2);
@@ -82,29 +96,31 @@
 
             <div class="space-y-3 mb-8">
                 <h3 class="font-bold text-[10px] text-slate-500 uppercase tracking-widest">2. Client Details</h3>
-                <input v-model="client.name" placeholder="Nama Klien / Perusahaan" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none">
-                <textarea v-model="client.address" rows="2" placeholder="Alamat Lengkap" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none"></textarea>
-                <input v-model="client.contact" placeholder="Kontak (Email/WA)" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none">
+                <input v-model="client.name" placeholder="Nama Klien" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none">
+                <textarea v-model="client.address" rows="2" placeholder="Alamat" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none"></textarea>
+                <input v-model="client.contact" placeholder="Kontak" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none">
             </div>
 
-            <div class="space-y-3 mb-24 md:mb-20">
+            <div class="space-y-3 mb-8">
                 <div class="flex justify-between items-center">
-                    <h3 class="font-bold text-[10px] text-slate-500 uppercase tracking-widest">3. Service Items</h3>
+                    <h3 class="font-bold text-[10px] text-slate-500 uppercase tracking-widest">3. Items</h3>
                     <button @click="addItem" class="text-[10px] bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 px-3 py-1 rounded border border-cyan-500/30 transition-all">+ Add Item</button>
                 </div>
                 
                 <div v-for="(item, index) in items" :key="index" class="bg-slate-950 p-3 rounded border border-slate-800 relative group">
                     <button @click="removeItem(index)" class="absolute top-2 right-2 text-slate-600 hover:text-red-500 text-xs p-1">✕</button>
-                    
-                    <input v-model="item.desc" placeholder="Judul Layanan" class="w-full bg-transparent border-b border-slate-800 focus:border-cyan-500 outline-none text-sm py-1 font-bold text-white mb-1">
-                    
-                    <textarea v-model="item.sub" placeholder="Rincian (Tekan Enter untuk baris baru)" rows="2" class="w-full bg-transparent border-none outline-none text-xs text-slate-500 py-1 mb-2 placeholder-slate-700 resize-none"></textarea>
-                    
+                    <input v-model="item.desc" placeholder="Judul Item" class="w-full bg-transparent border-b border-slate-800 focus:border-cyan-500 outline-none text-sm py-1 font-bold text-white mb-1">
+                    <textarea v-model="item.sub" placeholder="Rincian (Enter untuk baris baru)" rows="2" class="w-full bg-transparent border-none outline-none text-xs text-slate-500 py-1 mb-2 placeholder-slate-700 resize-none"></textarea>
                     <div class="flex gap-2">
                         <input v-model="item.qty" type="number" class="w-14 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-center text-white placeholder-slate-600" placeholder="Qty">
-                        <input v-model="item.price" type="number" class="flex-1 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-right text-cyan-400 font-mono" placeholder="Harga (Rp)">
+                        <input v-model="item.price" type="number" class="flex-1 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-right text-cyan-400 font-mono" placeholder="Harga">
                     </div>
                 </div>
+            </div>
+
+            <div class="space-y-3 mb-24 md:mb-20">
+                <h3 class="font-bold text-[10px] text-slate-500 uppercase tracking-widest">4. Notes / Terms (NB)</h3>
+                <textarea v-model="invoice.notes" rows="4" placeholder="Contoh: DP 50%, Revisi Max 3x, dll." class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none resize-none"></textarea>
             </div>
 
             <div class="fixed md:absolute bottom-0 left-0 w-full md:w-full bg-slate-900 p-4 border-t border-slate-800 z-50">
@@ -119,7 +135,7 @@
             <div class="page-preview flex flex-col justify-between">
                 
                 <div>
-                    <div class="flex justify-between items-start mb-12">
+                    <div class="flex justify-between items-start mb-8">
                         <div>
                             <h1 class="text-3xl font-extrabold tracking-tight text-white">VIXEL CREATIVE<span class="text-cyan-400">.</span></h1>
                             <div class="mt-3 pl-1 border-l-2 border-cyan-500">
@@ -138,15 +154,15 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-between items-start mb-10 pb-10 border-b border-slate-800">
+                    <div class="flex justify-between items-start mb-6 pb-6 border-b border-slate-800">
                         <div class="w-1/2">
-                            <p class="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-3">BILLED TO</p>
-                            <h3 class="text-lg font-bold text-white mb-1">{{ client.name || 'Nama Klien...' }}</h3>
-                            <p class="text-sm text-slate-400 leading-relaxed whitespace-pre-line mb-2">{{ client.address || 'Alamat Klien...' }}</p>
+                            <p class="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-2">BILLED TO</p>
+                            <h3 class="text-lg font-bold text-white mb-1">{{ client.name || 'Nama Klien' }}</h3>
+                            <p class="text-sm text-slate-400 leading-relaxed whitespace-pre-line mb-2">{{ client.address || 'Alamat...' }}</p>
                             <p class="text-xs text-cyan-600 font-mono">{{ client.contact }}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">DIGITAL STUDIO BASED IN SURABAYA</p>
+                            <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-2">DIGITAL STUDIO SURABAYA</p>
                             <div class="text-sm text-slate-400 leading-relaxed">
                                 <p class="text-white font-bold">Wildan Abdillah</p>
                                 <p>Founder, Vixel Ventures</p>
@@ -156,7 +172,7 @@
                         </div>
                     </div>
 
-                    <div class="glass-box mb-8">
+                    <div class="glass-box mb-6">
                         <div class="table-header flex py-3 px-4">
                             <div class="w-3/5 text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Description</div>
                             <div class="w-20 text-center text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Qty</div>
@@ -179,7 +195,7 @@
                 </div>
 
                 <div>
-                    <div class="flex justify-end mb-12">
+                    <div class="flex justify-end mb-6">
                         <div class="w-1/2">
                             <div class="flex justify-between items-center mb-2 px-4">
                                 <span class="text-xs text-slate-500">Subtotal</span>
@@ -192,25 +208,35 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-8 pt-8 border-t border-slate-900">
+                    <div class="grid grid-cols-2 gap-8 pt-6 border-t border-slate-900">
+                        
                         <div>
-                            <p class="text-[10px] font-bold text-cyan-600 uppercase tracking-widest mb-4">PAYMENT METHOD</p>
-                            <div class="text-sm">
-                                <div class="mb-3">
+                            <p class="text-[10px] font-bold text-cyan-600 uppercase tracking-widest mb-3">PAYMENT METHOD</p>
+                            <div class="text-sm mb-4">
+                                <div class="mb-2">
                                     <p class="text-slate-400 text-xs">Bank Transfer:</p>
-                                    <p class="text-white font-bold text-lg">BLU by BCA</p>
+                                    <p class="text-white font-bold text-lg">Blu (BCA Digital)</p>
                                     <p class="text-xl font-mono text-cyan-400 tracking-wider mt-1">007479389112</p>
                                     <p class="text-xs text-slate-500 mt-1 uppercase">A.N. Wildan Abdillah</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="text-right flex flex-col justify-end">
-                            <p class="text-xs text-slate-500 italic mb-1">"Visuals by Heart, Logic by Code."</p>
+
+                        <div class="text-right">
+                            <div v-if="invoice.notes">
+                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">NOTES & TERMS</p>
+                                <p class="text-xs text-slate-400 whitespace-pre-line leading-relaxed italic border-r-2 border-slate-800 pr-3">
+                                    {{ invoice.notes }}
+                                </p>
+                            </div>
+                            
+                            <p class="text-xs text-slate-500 italic mt-6 mb-1">"Visuals by Heart, Logic by Code."</p>
                             <p class="text-[10px] text-slate-600">vixelcreative.id@gmail.com</p>
                         </div>
+
                     </div>
                 </div>
-
+                
                 <div class="absolute top-[-100px] right-[-100px] w-96 h-96 bg-cyan-600/20 rounded-full blur-[120px] pointer-events-none"></div>
                 <div class="absolute bottom-[-100px] left-[-100px] w-80 h-80 bg-blue-700/10 rounded-full blur-[100px] pointer-events-none"></div>
                 
@@ -226,27 +252,14 @@
                 return {
                     invoice: { 
                         number: 'INV/2025/XXX', 
-                        date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) 
+                        date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+                        notes: '• Pembayaran DP minimal 50%.\n• Pelunasan maksimal 3 hari setelah serah terima.' 
                     },
-                    client: { 
-                        name: '', 
-                        address: '', 
-                        contact: '' 
-                    },
-                    // Template Kosong (1 Baris Default)
-                    items: [
-                        { 
-                            desc: 'Jasa Pembuatan Website / Aplikasi', 
-                            sub: '• Detail 1\n• Detail 2', 
-                            qty: 1, 
-                            price: 0 
-                        }
-                    ]
+                    client: { name: '', address: '', contact: '' },
+                    items: [{ desc: 'Jasa Pembuatan Website / Aplikasi', sub: '• Fitur 1\n• Fitur 2', qty: 1, price: 0 }]
                 }
             },
-            computed: {
-                grandTotal() { return this.items.reduce((sum, item) => sum + (item.qty * item.price), 0); }
-            },
+            computed: { grandTotal() { return this.items.reduce((sum, item) => sum + (item.qty * item.price), 0); } },
             methods: {
                 formatCurrency(val) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val); },
                 addItem() { this.items.push({ desc: '', sub: '', qty: 1, price: 0 }); },
